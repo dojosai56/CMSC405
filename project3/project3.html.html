@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Sairam S. CMSC405 Project 3</title>
+<style>
+</style>
+<script src="three.js"></script>
+<script>
+
+"use strict";    
+
+var scene, camera, renderer;
+
+var canvas;
+
+var model;
+
+var tetrahedronRotation;
+
+var sphereRotation; 
+
+var cubeRotation;
+
+
+
+var animating = false;
+
+function createWorld() {
+    renderer.setClearColor( 0xE6E6FA );
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(45, canvas.width/canvas.height, 1, 30);
+    camera.position.z = 15; // camera on z axis
+    scene.add( new THREE.DirectionalLight(0xffffff, 0.3)); 
+
+    var greenLight = new THREE.DirectionalLight(0x40ff00, 0.3);
+    greenLight.position.set(0, 1, 0);
+    scene.add(greenLight);
+
+    var light = new THREE.DirectionalLight(0x00ff00, 0.5, 100);
+    light.position.set(-45, 0, 45);
+    scene.add(light);
+
+    var viewpointLight = new THREE.DirectionalLight(0xffffff, 0.8 );
+    viewpointLight.position.set(0, 0, 1);
+    scene.add(viewpointLight);
+
+    model = new THREE.Object3D();
+    model.rotation.set(0.5,0.5,0);
+    model.position.set(0,0,0);
+    model.scale.set(0.8,0.8,0.8);
+
+
+    var cube = new THREE.Mesh(
+        new THREE.BoxGeometry( 1, 1, 1 ),
+        new THREE.MeshLambertMaterial( {color: 0x00ff00} )
+        );
+
+    cube.position.set(1,1,4);
+    cubeRotation = new THREE.Object3D();
+    cubeRotation.add(cube);
+    model.add(cubeRotation);
+
+    var tetrahedron = new THREE.Mesh(
+        new THREE.TetrahedronGeometry(1),
+        new THREE.MeshLambertMaterial({color: 0x008080})
+    	);
+
+    tetrahedron.position.set(-4,2,4);
+    tetrahedronRotation = new THREE.Object3D();
+    tetrahedronRotation.add(tetrahedron);
+    model.add(tetrahedronRotation);
+
+    
+
+    var geometry = new THREE.CylinderGeometry( 2, 2, 10, 16 );
+    var material = new THREE.MeshPhongMaterial( {color: {color: 0xff7700}} );
+    var cylinder = new THREE.Mesh( geometry, material );
+    model.add( cylinder );
+
+
+    
+    var geometry = new THREE.CircleGeometry( 8, 45 );
+	var material = new THREE.MeshLambertMaterial( { color: 0x00008B } );
+	var circle = new THREE.Mesh( geometry, material );
+	model.add( circle );
+
+        
+    var geometry = new THREE.TorusGeometry( 5, 1, 8, 50 );
+    var material = new THREE.MeshLambertMaterial( { color: 0xffff00 } );
+    var torus = new THREE.Mesh( geometry, material );
+    model.add( torus );
+
+    var sphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(1,32,16),
+		new THREE.MeshPhongMaterial({
+		    color: "gold",
+			specular: 0x101010,
+			shininess: 32
+		})
+	);
+
+    
+	sphere.position.x = 4;
+	sphereRotation = new THREE.Object3D();
+	sphereRotation.add(sphere);
+	model.add(sphereRotation);
+
+    scene.add(model);
+
+    
+}
+
+// Render the scene
+function render() {
+    renderer.render(scene, camera);
+}
+
+function updateForFrame() {
+     sphereRotation.rotation.y += 0.04;
+     cubeRotation.rotation.x += 0.04;
+     tetrahedronRotation.rotation.z += 0.05;
+     
+
+}
+
+//--------------------------- animation support -----------------------------------
+
+function doFrame() {
+    if (animating) {
+        updateForFrame();
+        render();
+        requestAnimationFrame(doFrame); 
+	}
+}
+
+/* Responds when the setting of the "Animate" checkbox is changed.*/
+function doAnimateCheckbox() {
+    var anim = document.getElementById("animate").checked;
+	if (anim != animating) {
+		animating = anim;
+		if (animating) {
+			doFrame();
+		}
+	}
+}
+
+
+
+//----------------------------- keyboard support ----------------------------------
+/*  Responds to user's key press.  Here, it is used to rotate the model.
+ */
+ function doKey(event) {
+	var code = event.keyCode;
+	var rotated = true;
+	switch( code ) {
+	    case 37: model.rotation.y -= 0.03;  break;    // left arrow
+	    case 39: model.rotation.y +=  0.03; break;    // right arrow
+	    case 38: model.rotation.x -= 0.03;  break;    // up arrow
+	    case 40: model.rotation.x += 0.03;  break;    // down arrow
+	    case 33: model.rotation.z -= 0.03;  break;    // page up
+	    case 34: model.rotation.z += 0.03;  break;    // page down
+	    case 36: model.rotation.set(0.2,0,0); break;  // home
+	    default: rotated = false;
+	}
+	if (rotated) {
+		event.preventDefault();  // Prevent keys from scrolling the page.
+		if (!animating) { // (if an animation is running, no need for an extra render)
+			render();
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------
+
+/**
+ *  This init() function is called when by the onload event when the document has loaded.
+ */
+ function init() {
+	try {
+	    canvas = document.getElementById("glcanvas");
+		renderer = new THREE.WebGLRenderer( {
+		    canvas: canvas,
+		    antialias: true
+		} );
+	}
+	catch (e) {
+		document.getElementById("canvas-holder").innerHTML =
+		         "<h3><b>Sorry, WebGL is required but is not available.</b><h3>";
+		return;
+	}
+	document.addEventListener("keydown", doKey, false);
+	document.getElementById("animate").checked = false;
+	document.getElementById("animate").onchange = doAnimateCheckbox;
+  	createWorld();
+	render();
+}
+
+</script>
+</head>
+<body onload="init()">
+
+<h2>Sairam S. CMSC405 Project 3</h2>
+
+<p><b>Use Arrow, PageUp, PageDown, and Home keys to rotate the model.</b></p>
+
+<p><label><input type="checkbox" id="animate">Animate</label>
+</p>
+<p>
+     
+  </p>
+
+<div id="canvas-holder">
+<canvas id="glcanvas" width="640" height="500"></canvas>
+</div>
+
+</body>
+</html>
